@@ -1,0 +1,104 @@
+- name: Ensure the web root directory exists
+  ansible.builtin.file:
+    path: "{{ web_root }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Mark the directory as safe
+  ansible.builtin.command: git config --global --add safe.directory "{{ web_root }}"
+
+- name: Ensure correct ownership of the directory
+  ansible.builtin.file:
+    path: "{{ web_root }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    recurse: true
+
+- name: Ensure the kodehauz-web directory exists
+  ansible.builtin.file:
+    path: "{{ user_dir }}"
+    state: directory
+    owner: "{{ user }}"
+    mode: '0755'
+
+- name: Clone the Git repository
+  ansible.builtin.git:
+    repo: "{{ github_repo }}"
+    dest: "{{ user_dir }}"
+    version: dev
+    force: true
+  no_log: true
+
+- name: Limit the Git clone depth to 1
+  ansible.builtin.command:
+    cmd: git fetch --depth 1
+    chdir: "{{ user_dir }}"
+  no_log: true
+
+- name: Clean cache
+  ansible.builtin.command:
+    cmd: "pnpm cache clean"
+    chdir: "{{ user_dir }}"
+  changed_when: false
+
+- name: Install Node.js dependencies
+  ansible.builtin.command:
+    cmd: "pnpm install"
+    chdir: "{{ user_dir }}"
+  changed_when: false
+
+- name: Build the Next.js app
+  ansible.builtin.command:
+    cmd: "pnpm run build"
+    chdir: "{{ user_dir }}"
+  changed_when: false
+
+- name: Backup existing static files
+  ansible.builtin.command: cp -r "{{ web_root }}" "{{ web_root_backup }}{{ ansible_date_time.iso8601 }}"
+  register: backup_task
+  failed_when: backup_task.rc != 0
+  changed_when: backup_task.rc == 0
+
+- name: Copy static files to web root
+  ansible.builtin.copy:
+    src: "{{ user_out_dir }}"
+    dest: "{{ web_root }}"
+    remote_src: true
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Ensure the site available directory exists
+  ansible.builtin.file:
+    path: "{{ nginx_conf_path }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Ensure the site enable directory exists
+  ansible.builtin.file:
+    path: "{{ nginx_symlink_path }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Ensure the logs directory exists
+  ansible.builtin.file:
+    path: "{{ logs_dir }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Delete user directory
+  ansible.builtin.file:
+    path: "{{ user_dir }}"
+    state: absent
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+

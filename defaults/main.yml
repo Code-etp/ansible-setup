@@ -1,0 +1,14 @@
+app_name: kodehauz-web
+domain: dev.kodehauz.kodehauz.dev
+user_dir: /home/lateef/kodehauz-web
+user_out_dir: /home/lateef/kodehauz-web/out/
+app_user: www-data
+user: lateef
+app_group: www-data
+web_root: /var/www/{{ app_name }}/html
+web_root_backup: /var/www/{{ app_name }}/html_backup_
+logs_dir: /var/www/{{ app_name }}/logs
+github_repo: https://{{ lookup('env', 'GIT_PAT') }}@github.com/kodehauzinternship/kodehauz.git
+nginx_conf_path: /etc/nginx/sites-available/
+nginx_symlink_path: /etc/nginx/sites-enabled/
+nginx_template: "nginx_setup"

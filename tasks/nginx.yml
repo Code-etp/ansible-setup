@@ -1,0 +1,30 @@
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+  when: ansible_pkg_mgr == 'apt'
+
+- name: Nginx configuration
+  block:
+    - name: Check if NGINX configuration file exists
+      stat:
+        path: "/etc/nginx/sites-available/{{ domain }}"
+      register: nginx_config_status
+
+- name: Configure Nginx
+  ansible.builtin.template:
+    src: "{{ nginx_template }}.j2"
+    dest:  "/etc/nginx/sites-available/{{ domain }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0644"
+  become: true
+  become_user: root
+  notify: Restart Nginx
+
+- name: Site_enable
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ domain }}"
+    dest: "/etc/nginx/sites-enabled/{{ domain }}"
+    state: link
+    

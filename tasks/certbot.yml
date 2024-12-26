@@ -1,0 +1,49 @@
+---
+- name: Configure Certbot SSL Management
+  block:
+    - name: Check if SSL certificate already exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ domain }}/fullchain.pem"
+      register: ssl_cert_status
+
+    - name: Check Certificate Expiration
+      command: "certbot certificates -d {{ domain }}"
+      register: cert_check
+      changed_when: false
+      failed_when: false
+
+    - name: Obtain New SSL Certificate
+      command: >
+        certbot certonly --nginx -d {{ domain }} 
+        --non-interactive 
+        --agree-tos 
+        --cert-name {{ domain }}
+        --verbose
+      when: not ssl_cert_status.stat.exists
+      register: certbot_result
+      notify: Restart Nginx
+      failed_when: 
+        - certbot_result.rc != 0
+        - "'too many certificates' not in certbot_result.stderr"
+  
+    - name: Attempt SSL Certificate Renewal
+      command: "certbot renew --cert-name {{ domain }}"
+      when: 
+        - ssl_cert_status.stat.exists
+        - "'30 days' in cert_check.stdout"
+      register: renewal_result
+      failed_when: 
+        - renewal_result.rc != 0
+        - "'too many certificates' not in renewal_result.stderr"
+      notify: Restart Nginx
+
+    - name: Verify Certbot configuration
+      command: "certbot certificates -d {{ domain }}"
+      register: cert_status
+      changed_when: false
+
+- name: Install existing SSL certificate
+  ansible.builtin.shell: "certbot install --nginx --cert-name {{ domain }} --non-interactive"
+  become: true
+  when: ssl_cert_status.stat.exists
+  register: certbot_install

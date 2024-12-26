@@ -1,0 +1,13 @@
+---
+- name: Kodehauz-web
+  hosts: all
+  become: true
+  vars_files:
+    - ./defaults/main.yml
+  tasks:
+    - import_tasks: ./tasks/app.yml
+    - import_tasks: ./tasks/nginx.yml
+    - import_tasks: ./tasks/certbot.yml
+
+  handlers:
+    - import_tasks: ./handlers/main.yml
