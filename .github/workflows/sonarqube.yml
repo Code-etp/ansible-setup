@@ -1,0 +1,55 @@
+name: SonarQube Analysis
+on:
+  push:
+    branches: 
+      - dev
+  pull_request:
+    branches: 
+      - dev
+    
+jobs:
+  sonar:
+    runs-on: ${{ vars.TASK_RUNNER }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        
+    - name: Authenticate with GitHub packages
+      run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GIT_CREDENTIALS }}" >> ~/.npmrc
+      
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+         version: 8
+         run_install: false
+         
+    - name: Install dependencies
+      run: pnpm install
+        
+    - name: Install SonarQube Scanner
+      run: pnpm install -g sonarqube-scanner
+        
+    - name: SonarQube Scan
+      uses: sonarsource/sonarqube-scan-action@master
+      with:
+        projectBaseDir: .
+        args: >
+          -Dsonar.projectKey=Kodehauz-web
+          -Dsonar.projectName=Kodehauz-web
+          -Dsonar.sourceEncoding=UTF-8
+          -Dsonar.exclusions=**/node_modules/**,**/.next/**,**/coverage/**,**/*.test.js,**/*.test.tsx,**/*.test.ts,**/dist/**
+          -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.test.js,**/*.test.jsx
+          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
+          -Dsonar.javascript.node.maxspace=4096
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_NEW }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL_NEW }}
+        SONAR_SCANNER_OPTS: "-Xmx4096m -Dsonar.ws.timeout=600 -Dsonar.ce.javaOpts=-Xmx2048m"
+

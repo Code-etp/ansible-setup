@@ -1,0 +1,53 @@
+name: kodehauz vitest unit testing
+
+on:
+  push:
+    branches: 
+      - dev
+  pull_request:
+    branches: 
+      - dev
+
+jobs:
+  build:
+    runs-on:  ${{ vars.TASK_RUNNER }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Authenticate with GitHub packages
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GIT_CREDENTIALS }}" >> ~/.npmrc
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install Dependencies
+        run: |
+             pnpm install --no-frozen-lockfile
+
+      - name: Clean pnpm store
+        run: pnpm store prune
+              
+      - name: Run test with Vitest
+        run: pnpm test

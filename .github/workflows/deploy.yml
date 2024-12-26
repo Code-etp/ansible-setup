@@ -1,0 +1,45 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ${{ vars.TASK_RUNNER }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+
+      - name: Authenticate with GitHub Packages
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GIT_CREDENTIALS }}" >> ~/.npmrc
+       
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Run Ansible Playbook
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "false"
+          SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+          GIT_PAT: ${{secrets.GIT_PAT}}
+          HOST: ${{secrets.HOST}}
+          USER: ${{secrets.USER}}
+        run: |
+          echo "${{ secrets.USER_KEY}}" > ~/.ssh/id_rsa_kodehauz-key
+          chmod 600 ~/.ssh/id_rsa_kodehauz-key
+          ansible --version
+          ansible-playbook -i ansible_setup/inventory.yml ansible_setup/playbook.yml
