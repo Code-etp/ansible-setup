@@ -1,0 +1,17 @@
+---
+- name: aws-setup
+  hosts: localhost
+  connection: local
+  gather_facts: False
+
+  vars_files:
+    - ./default/secrets.yml
+
+  tasks:
+    - import_tasks: ./tasks/vpc.yaml
+    - import_tasks: ./tasks/igw.yaml
+    - import_tasks: ./tasks/subnet.yaml
+    - import_tasks: ./tasks/routing_table.yaml
+    - import_tasks: ./tasks/security_group.yaml
+    - import_tasks: ./tasks/key.yaml
+    - import_tasks: ./tasks/instance.yaml

@@ -1,0 +1,20 @@
+- name: Create Security Group
+  amazon.aws.ec2_security_group:
+      name: "my-security-group"
+      description: "Security group for EC2 instance"
+      vpc_id: "{{ ansible_vpc.vpc.id }}"
+      region: "{{ region }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      rules:
+          - proto: tcp
+            ports:
+              - 22
+            cidr_ip: "0.0.0.0/0"
+            rule_desc: "allow SSH"
+          - proto: tcp
+            ports:
+              - 80
+            cidr_ip: "0.0.0.0/0"
+            rule_desc: "allow HTTP"
+  register: security_group

@@ -1,0 +1,11 @@
+- name: Create public subnet
+  amazon.aws.ec2_vpc_subnet:
+      state: present
+      vpc_id: "{{ ansible_vpc.vpc.id }}"
+      cidr: "10.0.1.0/24"
+      region: "{{ region }}"
+      aws_access_key: "{{ aws_access_key }}"
+      aws_secret_key: "{{ aws_secret_key }}"
+      tags:
+        Name: "Public Subnet"
+  register: public_subnet

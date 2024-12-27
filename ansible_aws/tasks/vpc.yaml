@@ -1,0 +1,10 @@
+ - name: Create VPC
+   amazon.aws.ec2_vpc_net:
+     name: "vpc"
+     cidr_block: "10.0.0.0/16"
+     region: "{{ region }}"
+     aws_access_key: "{{ aws_access_key }}"
+     aws_secret_key: "{{ aws_secret_key }}"
+     tags:
+        Environment: Development
+   register: ansible_vpc
