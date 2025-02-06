@@ -1,9 +1,8 @@
 name: Deploy Application
 
 on:
-  push:
-    branches:
-      - de
+  repository_dispatch:
+    types: [trigger-workflow]
 
 jobs:
   deploy:
