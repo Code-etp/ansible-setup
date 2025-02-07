@@ -28,21 +28,16 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y ansible
-
-          
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-
         
-      - name: Run Ansible Playbook
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "false"
-          SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
-          GIT_PAT: ${{secrets.GIT_PAT}}
-          HOST: ${{secrets.HOST}}
-          USER: ${{secrets.USER}}
-        run: |
-          echo "${{ secrets.USER_KEY}}" > ~/.ssh/id_rsa_kodehauz-key
-          chmod 600 ~/.ssh/id_rsa_kodehauz-key
-          ansible --version
-          ansible-playbook -i ansible_setup/inventory.yml ansible_setup/playbook.yml
+   #   - name: Run Ansible Playbook
+    #    env:
+     #     ANSIBLE_HOST_KEY_CHECKING: "false"
+      #    SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+       #   GIT_PAT: ${{secrets.GIT_PAT}}
+        #  HOST: ${{secrets.HOST}}
+         # USER: ${{secrets.USER}}
+        #run: |
+         # echo "${{ secrets.USER_KEY}}" > ~/.ssh/id_rsa_kodehauz-key
+          #chmod 600 ~/.ssh/id_rsa_kodehauz-key
+          #ansible --version
+          #ansible-playbook -i ansible_setup/inventory.yml ansible_setup/playbook.yml
